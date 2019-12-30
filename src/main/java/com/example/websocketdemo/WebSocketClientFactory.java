@@ -1,10 +1,10 @@
 package com.example.websocketdemo;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -12,9 +12,13 @@ import java.net.URISyntaxException;
 
 @Component
 @Slf4j
-public class OutCallWebSocketClient {
+@Data
+public class WebSocketClientFactory {
 
     public static final String outCallWebSockertUrl = "ws://10.1.3.137:356";
+
+    private WebSocketClient outCallWebSocketClientHolder;
+
 
     /**
      * 创建websocket对象
@@ -53,16 +57,9 @@ public class OutCallWebSocketClient {
     /**
      * 连接失败的时候打开新链接
      */
-    @Bean
     public WebSocketClient retryOutCallWebSocketClient() {
         try {
-
-            // TODO 先将spring启动的时候的管理的retryOutCallWebSocketClient清空
-
-
-            // 创建新的retryOutCallWebSocketClient
             WebSocketClient webSocketClient = this.createNewWebSocketClient();
-            System.out.println(webSocketClient);
 
             while (!webSocketClient.getReadyState().equals(WebSocket.READYSTATE.OPEN)) {
                 log.debug("正在连接中,请稍后........");
@@ -70,9 +67,8 @@ public class OutCallWebSocketClient {
             String sendOpenJsonStr = "{\"event\":\"connect\",\"sid\":\"1ae4e3167b3b49c7bfc6b79a74f229691562914214595\",\"token\":\"df59eba89ce949ac866a2312063e10b6\"}";
             webSocketClient.send(sendOpenJsonStr);
 
-            // 再次放到spring管理中
-
-
+            // 每次创建新的就放进去
+            this.setOutCallWebSocketClientHolder(webSocketClient);
             return webSocketClient;
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -80,5 +76,14 @@ public class OutCallWebSocketClient {
         }
         return null;
     }
+
+
+    public void sendMsg(WebSocketClient webSocketClient, String message) {
+        while (!webSocketClient.getReadyState().equals(WebSocket.READYSTATE.OPEN)) {
+            log.debug("正在建立通道，请稍等");
+        }
+        webSocketClient.send(message);
+    }
+
 
 }
