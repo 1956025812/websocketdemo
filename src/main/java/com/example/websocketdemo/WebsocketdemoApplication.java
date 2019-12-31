@@ -17,7 +17,8 @@ public class WebsocketdemoApplication implements ApplicationRunner {
     private WebSocketClientFactory webSocketClientFactory;
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args) {
+        // 项目启动的时候打开websocket连接
         webSocketClientFactory.retryOutCallWebSocketClient();
     }
 

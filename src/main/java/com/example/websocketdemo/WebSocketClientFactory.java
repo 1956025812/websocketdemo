@@ -23,7 +23,7 @@ public class WebSocketClientFactory {
     /**
      * 创建websocket对象
      *
-     * @return
+     * @return WebSocketClient
      * @throws URISyntaxException
      */
     private WebSocketClient createNewWebSocketClient() throws URISyntaxException {
@@ -55,17 +55,16 @@ public class WebSocketClientFactory {
 
 
     /**
-     * 连接失败的时候打开新链接
+     * 项目启动或连接失败的时候打开新链接,进行连接认证
      */
     public WebSocketClient retryOutCallWebSocketClient() {
         try {
+            // 创建新的通道
             WebSocketClient webSocketClient = this.createNewWebSocketClient();
 
-            while (!webSocketClient.getReadyState().equals(WebSocket.READYSTATE.OPEN)) {
-                log.debug("正在连接中,请稍后........");
-            }
+            // 认证信息， 改成自己服务端的即可
             String sendOpenJsonStr = "{\"event\":\"connect\",\"sid\":\"1ae4e3167b3b49c7bfc6b79a74f229691562914214595\",\"token\":\"df59eba89ce949ac866a2312063e10b6\"}";
-            webSocketClient.send(sendOpenJsonStr);
+            this.sendMsg(webSocketClient, sendOpenJsonStr);
 
             // 每次创建新的就放进去
             this.setOutCallWebSocketClientHolder(webSocketClient);
@@ -78,7 +77,14 @@ public class WebSocketClientFactory {
     }
 
 
+    /**
+     * 发送消息
+     *
+     * @param webSocketClient 指定的webSocketClient
+     * @param message         消息
+     */
     public void sendMsg(WebSocketClient webSocketClient, String message) {
+        log.info("websocket向服务端发送消息，消息为：{}", message);
         while (!webSocketClient.getReadyState().equals(WebSocket.READYSTATE.OPEN)) {
             log.debug("正在建立通道，请稍等");
         }
